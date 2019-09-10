@@ -31,6 +31,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -104,7 +105,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        //创建GoogleAPIClient实例
         if(null == mGoogleApiClient)
         {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -124,6 +125,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 loadPlacePicker();
             }
         });
+        makeFragment();
     }
 
     /**
@@ -359,6 +361,8 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
 
+//        SettingsClient client = LocationServices.getSettingsClient(this);
+//        client.checkLocationSettings(builder.build());
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
@@ -416,33 +420,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 placeMarkerOnMap(place.getLatLng());
             }
         }
-
-
-        // Initialize the AutocompleteSupportFragment.
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
-
-        PlacesClient placesClient = Places.createClient(this);
-
-        // Specify the types of place data to return.
-        autocompleteFragment.setPlaceFields(Arrays.asList(com.google.android.libraries.places.api.model.Place.Field.ID, com.google.android.libraries.places.api.model.Place.Field.NAME));
-
-        // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
-                // TODO: Get info about the selected place.
-                Log.i("tag", "Place: " + place.getName() + ", " + place.getId());
-            }
-
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-                Log.i("tag", "An error occurred: " + status);
-            }
-        });
     }
 
     // 2
@@ -471,6 +448,38 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     @Override
     public void onError(@NonNull Status status) {
 
+    }
+
+    private void makeFragment(){
+        //设置地区过滤器
+        AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
+        typeFilterBuilder.setCountry("ISO 3166-2:JP");
+
+        // Initialize the AutocompleteSupportFragment.
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
+
+        PlacesClient placesClient = Places.createClient(this);
+
+        // Specify the types of place data to return.
+        autocompleteFragment.setPlaceFields(Arrays.asList(com.google.android.libraries.places.api.model.Place.Field.ID, com.google.android.libraries.places.api.model.Place.Field.NAME));
+
+        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
+                // TODO: Get info about the selected place.
+                Log.i("tag", "Place: " + place.getName() + ", " + place.getId());
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i("tag", "An error occurred: " + status);
+            }
+        });
     }
 
 

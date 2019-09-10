@@ -187,11 +187,11 @@
 
     <Button
         android:id="@+id/button4"
-        android:layout_width="85dp"
-        android:layout_height="27dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:text="-----"
+        android:layout_width="102dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
+        android:text="for the map"
         mapbox:layout_constraintStart_toStartOf="parent"
         mapbox:layout_constraintTop_toTopOf="parent" />
 
