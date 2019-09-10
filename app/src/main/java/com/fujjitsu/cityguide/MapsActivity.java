@@ -451,6 +451,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     }
 
     private void makeFragment(){
+        Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
         //设置地区过滤器
         AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
         typeFilterBuilder.setCountry("ISO 3166-2:JP");
@@ -459,7 +460,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
-        Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
+
 
         PlacesClient placesClient = Places.createClient(this);
 
