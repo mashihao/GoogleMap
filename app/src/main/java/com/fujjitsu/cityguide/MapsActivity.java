@@ -8,15 +8,11 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
+import com.google.android.gms.location.LocationListener;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -36,6 +32,7 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -52,9 +49,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
+
 public class MapsActivity extends FragmentActivity implements PlaceSelectionListener,OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,GoogleMap.OnMarkerClickListener, LocationListener {
 
-    private GoogleMap mMap = null;
+    private GoogleMap mMap;
 
     FloatingActionButton fab;
 
@@ -139,8 +141,8 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        googleMap.setMyLocationEnabled(true);
         mMap = googleMap;
-
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
@@ -163,6 +165,32 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         更远的地区仅仅支持到 13，将它设为二者之间的 12 比较合适，显示较多的细节且不会太近。
          */
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPlace,12));
+        /*
+        1setMyLocationEnabled 一句打开了 my-location 图层，用于在用户坐标出绘制一个浅蓝色的圆点。同时加一个按钮到地图上，当你点击它，地图中心会移动到用户的坐标。
+        2getLocationAvailability 一句判断设备上的位置信息是否有效。
+        3getLastLocation 一句允许你获得当前有效的最新坐标。
+        4如果能够获得最新坐标，将镜头对准用户当前坐标。
+         */
+        // 1
+        mMap.setMyLocationEnabled(true);
+        //修改地图类型 Android 地图 API 提供了几种地图类型：MAP_TYPE_NORMAL、MAP_TYPE_SATELLITE、 MAP_TYPE_TERRAIN、MAP_TYPE_HYBRID。
+        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+
+        // 2
+        LocationAvailability locationAvailability =
+                LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
+        if (null != locationAvailability && locationAvailability.isLocationAvailable()) {
+            // 3
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            // 4
+            if (mLastLocation != null) {
+                LatLng currentLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation
+                        .getLongitude());
+                //添加大头钉
+                placeMarkerOnMap(currentLocation);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            }
+        }
     }
 
     //LocationListener 定义了 onLocationChanged() 方法，当用户位置改变时调用。这个方法只有 LocationListener 注册以后才会调用
@@ -177,20 +205,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         }
     }
 
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
 
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
-    }
 
     //GoogleApiClient.ConnectionCallbacks 提供了一个回调，当客户端和服务器成功建立连接时调用(onConnected()) 或者临时性的断开时调用 (onConnectionSuspended())。
     @Override
@@ -244,32 +259,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                     Manifest.permission.ACCESS_FINE_LOCATION},LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
-        /*
-        1setMyLocationEnabled 一句打开了 my-location 图层，用于在用户坐标出绘制一个浅蓝色的圆点。同时加一个按钮到地图上，当你点击它，地图中心会移动到用户的坐标。
-        2getLocationAvailability 一句判断设备上的位置信息是否有效。
-        3getLastLocation 一句允许你获得当前有效的最新坐标。
-        4如果能够获得最新坐标，将镜头对准用户当前坐标。
-         */
-        // 1
-        mMap.setMyLocationEnabled(true);
-        //修改地图类型 Android 地图 API 提供了几种地图类型：MAP_TYPE_NORMAL、MAP_TYPE_SATELLITE、 MAP_TYPE_TERRAIN、MAP_TYPE_HYBRID。
-        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
 
-        // 2
-        LocationAvailability locationAvailability =
-                LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
-        if (null != locationAvailability && locationAvailability.isLocationAvailable()) {
-            // 3
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            // 4
-            if (mLastLocation != null) {
-                LatLng currentLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation
-                        .getLongitude());
-                //添加大头钉
-                placeMarkerOnMap(currentLocation);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-            }
-        }
     }
 
     /*
@@ -484,7 +474,8 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     }
 
 
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
 
-
-
+    }
 }
