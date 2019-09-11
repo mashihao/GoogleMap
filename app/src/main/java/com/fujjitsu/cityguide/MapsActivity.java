@@ -5,14 +5,18 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import com.google.android.gms.location.LocationListener;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -22,6 +26,7 @@ import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -32,29 +37,26 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.maps.android.PolyUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
-
-public class MapsActivity extends FragmentActivity implements PlaceSelectionListener,OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,GoogleMap.OnMarkerClickListener, LocationListener {
+public class MapsActivity extends FragmentActivity implements PlaceSelectionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, LocationListener {
 
     private GoogleMap mMap;
 
@@ -91,7 +93,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
         try {
             startActivityForResult(builder.build(MapsActivity.this), PLACE_PICKER_REQUEST);
-        } catch(GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
             e.printStackTrace();
         }
     }
@@ -108,8 +110,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         //创建GoogleAPIClient实例
-        if(null == mGoogleApiClient)
-        {
+        if (null == mGoogleApiClient) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
@@ -119,7 +120,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         //接收位置
         createLocationRequest();
 
-       // 编译运行，点击地图下方的 search 按钮，会弹出 place picker：
+        // 编译运行，点击地图下方的 search 按钮，会弹出 place picker：
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +142,11 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION},LOCATION_PERMISSION_REQUEST_CODE);
+            return;
+        }
         googleMap.setMyLocationEnabled(true);
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
@@ -444,12 +450,19 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
         //设置地区过滤器
         AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
-        typeFilterBuilder.setCountry("ISO 3166-2:JP");
+        typeFilterBuilder.setCountry("JP");
+
 
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
+        autocompleteFragment.setCountry("JP");
+
+//        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+//                .setTypeFilter(AutocompleteFilter.TYPE_FILTER_REGIONS)
+//                .setCountry("JP")
+//                .build();
 
 
         PlacesClient placesClient = Places.createClient(this);
@@ -463,6 +476,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
                 // TODO: Get info about the selected place.
                 Log.i("tag", "Place: " + place.getName() + ", " + place.getId());
+                makeLine(mMap);
             }
 
             @Override
@@ -471,6 +485,35 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 Log.i("tag", "An error occurred: " + status);
             }
         });
+    }
+
+    //绘制路线
+    private void makeLine(GoogleMap mMap) {
+        String line = "agryDundzRnXibE~yM{lBlyXaM|}O{y@`_SgrIb_OamDnpOmkA`bSseJ" +
+                "jyTe|MlqHsgKpfBw|If`F}kBpiFefCp}EgeDdpO{uHjsIe`QnnHcy_@nmKk}Et`NsaMlsQisVbqJq" +
+                "iTreNciY~eKcmSxkI{vOlnKonHtmZqwNr{PwtJ~pK_vDlfI}sQvwB}sLzeHodLvhEboBdbCcUzmApl" +
+                "CniDaUr}CoyDzyCtDxmFkxDzi@kpJfgC_~EtcApt@hbA}fDuy@ycEpnAwgDkcC}lBjqDgsKpdDmqIx" +
+                "d@_iIlbCawB`}AqoD|nBw`DjcGebAxnGjyA~jOv|@vpCyoB~oJcJf_InaAfcCl~BriInj@flAklCtk" +
+                "GuxD`lHsqBxhDu~D~~Em{Nx_@gtH_`BkzVll@}eIomBy`GzaDemDdsD~rBnmOd}HxrMvjD~wGbVtuEe" +
+                "hBjkLx`DhkKflDlwE`A`zBtfCd_KuWz_Jrj@ptDnqA|mMkVnsL}iAvkL`|AnyJ{LvdBd_@nyB{rHjzG" +
+                "ijC~tDsm@dkFwzAbrHi_D~uAjqC||C{pFxkEg|SdpDgoZjmIikPleFo~LlmEqjN~eBm~VxnJk~OvcFo" +
+                "dJjWwdKxoFae`@~yEe~Hfo@ckMxyG_nSnrLii_@r_CmxOtzGaoRlxBauJ`LifN~`D}uE_ZuyHmr@o|I" +
+                "mfCsh\\giEmuIkeAkyLhmC_u\nwAkd\ti@ugSxqG{uf@npD_jFsvAkhMsvCkuIlyAehFqt@wlMzvEs_G" +
+                "h`EiePr`DgcLbiCmfExgJ|lAtlk@upH~gRo`C`jGuoCnmFolCnvEhpExpFd{@fgDyt@xqJ{rRjqE}xD" +
+                "`xIosB|hQktGzbQa{EnxG_|FfuJwdG|qFsvBye@}fFhkBqaM~fGulPwZe_\\dt@g`IzfDsrFx`FmpCf|A" +
+                "qyEhxE{eJ`_BwjGpbIuzF`cHm`Ixz@yfEbwCarDcnBuzNbgFolk@uIooW`pLouAd`L{`B`dP}rEfyK}x" +
+                "Bx~FinFx{D{cKxc@amGfzA_qHnbBghSlk@_gN`gHyfFbbN{jJnvKafKv_OkgA~bFefBlrDgvGbdHipFr}" +
+                "CuiH~pIs~Ip~JqtKndIidR~`@kgKrcDgqHpfRcnMrrCeoDlnG{|@|eD_`K|rBoeK|uAom\\wpFwlO``@wsO" +
+                "ocAyeG~pBw|G_k@cvJbcFw|UfnNesNblGorHtwEam@vsLpuDppLqnErkBeaLpzCkuD~fImkHz|KnqBn" +
+                "`Dyw@ryBcnDvoHmdI~gAywG~wBadOuRgp@";
+
+       List<LatLng> decodedPath = PolyUtil.decode(line);  //来源Google Map Util
+        PolylineOptions lineOptions = new PolylineOptions();
+            lineOptions.addAll(decodedPath); //添加路线
+            lineOptions.color(Color.GREEN);  //线条设置
+            lineOptions.jointType(JointType.ROUND);
+            lineOptions.width(15f);
+        mMap.addPolyline(lineOptions);
     }
 
 

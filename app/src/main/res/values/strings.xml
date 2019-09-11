@@ -1,4 +1,11 @@
 <resources>
-    <string name="app_name">City Guide</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="app_name">City Guideeeee</string>
+    <string name="title_activity_maps">Mappppp</string>
+    <string name="title_home">Home</string>
+    <string name="title_music">music</string>
+    <string name="title_follow">follow</string>
+    <string name="title_me">me</string>
+    <string name="titlebar_topic">Find a place</string>
+    <string name="titlebar_hint">click it</string>
+    <string name="home_title1">Explore nearby</string>
 </resources>
