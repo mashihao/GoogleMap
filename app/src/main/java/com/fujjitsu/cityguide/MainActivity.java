@@ -1,8 +1,11 @@
 package com.fujjitsu.cityguide;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +28,7 @@ public class MainActivity extends AppCompatActivity{
     private Example3Fragment example3Fragment = new Example3Fragment();
     private Example4Fragment example4Fragment = new Example4Fragment();
     private ArrayList<Fragment> fragments = new ArrayList<>();
-    private Button btn;
+    ImageView button;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -59,6 +62,14 @@ public class MainActivity extends AppCompatActivity{
         navView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         currentFragment = exampleFragment;
         manageFragment(savedInstanceState);
+        button = findViewById(R.id.titlebar_menu);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,MapsActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 

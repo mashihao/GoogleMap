@@ -12,6 +12,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -87,16 +88,16 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     private static final int PLACE_PICKER_REQUEST = 3;
 
     //这个方法创建了新的 builder 用于创建 intent，这个 Intent 用于打开一个 Place Picker UI，然后打开这个 PlacePicker Intent
-    private void loadPlacePicker() {
-
-        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-
-        try {
-            startActivityForResult(builder.build(MapsActivity.this), PLACE_PICKER_REQUEST);
-        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void loadPlacePicker() {
+//
+//        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+//
+//        try {
+//            startActivityForResult(builder.build(MapsActivity.this), PLACE_PICKER_REQUEST);
+//        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     @Override
@@ -122,12 +123,12 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
         // 编译运行，点击地图下方的 search 按钮，会弹出 place picker：
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loadPlacePicker();
-            }
-        });
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                loadPlacePicker();
+//            }
+//        });
         makeFragment();
     }
 
@@ -447,7 +448,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     }
 
     private void makeFragment(){
-        Places.initialize(getApplicationContext(),"AIzaSyA5vZwwwAVWeouNuAPjQI18Kr87OJreqws");
+        Places.initialize(getApplicationContext(),"");
         //设置地区过滤器
         AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
         typeFilterBuilder.setCountry("JP");
@@ -475,7 +476,8 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             @Override
             public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
                 // TODO: Get info about the selected place.
-                Log.i("tag", "Place: " + place.getName() + ", " + place.getId());
+                Log.i("info", "Place: " + place.getName() + ", " + place.getId());
+                Toast.makeText(getApplication(),place.getName()+"+"+place.getId(),Toast.LENGTH_LONG).show();
                 makeLine(mMap);
             }
 
