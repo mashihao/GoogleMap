@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -16,14 +15,14 @@ import androidx.fragment.app.FragmentTransaction;
 import com.fujjitsu.cityguide.Fragment.Example2Fragment;
 import com.fujjitsu.cityguide.Fragment.Example3Fragment;
 import com.fujjitsu.cityguide.Fragment.Example4Fragment;
-import com.fujjitsu.cityguide.Fragment.ExampleFragment;
+import com.fujjitsu.cityguide.Fragment.Example1Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity{
     private Fragment currentFragment=new Fragment();
-    private ExampleFragment exampleFragment = new ExampleFragment();
+    private Example1Fragment exampleFragment = new Example1Fragment();
     private Example2Fragment example2Fragment = new Example2Fragment();
     private Example3Fragment example3Fragment = new Example3Fragment();
     private Example4Fragment example4Fragment = new Example4Fragment();

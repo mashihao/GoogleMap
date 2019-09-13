@@ -11,7 +11,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,8 +19,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -33,7 +30,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -87,25 +83,13 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     //查询兴趣点
     private static final int PLACE_PICKER_REQUEST = 3;
 
-    //这个方法创建了新的 builder 用于创建 intent，这个 Intent 用于打开一个 Place Picker UI，然后打开这个 PlacePicker Intent
-//    private void loadPlacePicker() {
-//
-//        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-//
-//        try {
-//            startActivityForResult(builder.build(MapsActivity.this), PLACE_PICKER_REQUEST);
-//        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
-//            e.printStackTrace();
-//        }
-//    }
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -120,15 +104,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         }
         //接收位置
         createLocationRequest();
-
-        // 编译运行，点击地图下方的 search 按钮，会弹出 place picker：
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                loadPlacePicker();
-//            }
-//        });
+        //绘制路线
         makeFragment();
     }
 
@@ -199,7 +175,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             }
         }
     }
-
     //LocationListener 定义了 onLocationChanged() 方法，当用户位置改变时调用。这个方法只有 LocationListener 注册以后才会调用
     @Override
     public void onLocationChanged(Location location) {
@@ -211,9 +186,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             placeMarkerOnMap(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
         }
     }
-
-
-
     //GoogleApiClient.ConnectionCallbacks 提供了一个回调，当客户端和服务器成功建立连接时调用(onConnected()) 或者临时性的断开时调用 (onConnectionSuspended())。
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -227,13 +199,11 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
 
     //GoogleApiClient.OnConnectionFailedListener 提供了一个回调方法 (onConnectionFailed()) ，当客户端连接服务器失败时调用。
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 
     //GoogleMap.OnMarkerClickListener 定义了一个 onMarkerClick() 方法，当大头钉被点击时调用
@@ -377,12 +347,14 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                     // 5
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
+                            Toast.makeText(getApplicationContext(),"您的定位没有开启！",Toast.LENGTH_LONG).show();
                             status.startResolutionForResult(MapsActivity.this, REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
                         }
                         break;
                     // 6
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Toast.makeText(getApplicationContext(),"无法获取",Toast.LENGTH_LONG).show();
                         break;
                 }
             }
@@ -450,8 +422,8 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     private void makeFragment(){
         Places.initialize(getApplicationContext(),"");
         //设置地区过滤器
-        AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
-        typeFilterBuilder.setCountry("JP");
+//        AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
+//        typeFilterBuilder.setCountry("JP");
 
 
         // Initialize the AutocompleteSupportFragment.
@@ -459,12 +431,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
         autocompleteFragment.setCountry("JP");
-
-//        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-//                .setTypeFilter(AutocompleteFilter.TYPE_FILTER_REGIONS)
-//                .setCountry("JP")
-//                .build();
-
 
         PlacesClient placesClient = Places.createClient(this);
 
