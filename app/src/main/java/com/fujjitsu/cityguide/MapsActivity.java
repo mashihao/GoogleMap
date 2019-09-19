@@ -10,6 +10,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,15 +22,21 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -42,11 +49,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.maps.android.PolyUtil;
 
 import java.io.IOException;
@@ -56,8 +65,6 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements PlaceSelectionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, LocationListener {
 
     private GoogleMap mMap;
-
-    FloatingActionButton fab;
 
     //连接 Google Play Services 库中的 Google API，你需要先创建一个 GoogleApiClient。
     private GoogleApiClient mGoogleApiClient;
@@ -83,13 +90,15 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     //查询兴趣点
     private static final int PLACE_PICKER_REQUEST = 3;
 
-
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback mLocationCallback;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -106,6 +115,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         createLocationRequest();
         //绘制路线
         makeFragment();
+
     }
 
     /**
@@ -155,7 +165,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         4如果能够获得最新坐标，将镜头对准用户当前坐标。
          */
         // 1
-        mMap.setMyLocationEnabled(true);
+ //       mMap.setMyLocationEnabled(true);
         //修改地图类型 Android 地图 API 提供了几种地图类型：MAP_TYPE_NORMAL、MAP_TYPE_SATELLITE、 MAP_TYPE_TERRAIN、MAP_TYPE_HYBRID。
         mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
 
@@ -172,6 +182,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 //添加大头钉
                 placeMarkerOnMap(currentLocation);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
             }
         }
     }
@@ -304,8 +315,11 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             return;
         }
         //2
+        fusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
+
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest,
                 (com.google.android.gms.location.LocationListener) this);
+
     }
 
     /*
@@ -313,7 +327,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     1创建一个 LocationRequest 对象，将它添加到一个 LocationSettingsRequest.Builder 对象，并基于用户位置设置的当前状态查询位置变化信息并处理。
     2setInterval() 指定了 app 多长时间接受一次变化通知。
     3setFastestInterval() 指定 app 能够处理的变化通知的最快速度。设置fastestInterval 能够限制位置变化通知发送给你的 app 的频率。在开始请求位置变化通知之前，需要检查用户位置设置的状态。
-    4SUCCESS 状态说明一切正常，你可以初始化一个 location request。
+    4SUCCESS 状态说明mMap.setMyLocationEnabled()一切正常，你可以初始化一个 location request。
     5RESOLUTION_REQUIRED 状态表明位置设置有一个问题有待修复。有可能是因为用户的位置设置被关闭了。你可以向用户显示一个对话框：
      */
     // 1
@@ -328,8 +342,48 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
 
-//        SettingsClient client = LocationServices.getSettingsClient(this);
-//        client.checkLocationSettings(builder.build());
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                mLocationUpdateState = true;
+                startLocationUpdates();
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (e instanceof ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed
+                    // by showing the user a dialog.
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
+                        resolvable.startResolutionForResult(MapsActivity.this,
+                                REQUEST_CHECK_SETTINGS);
+                    } catch (IntentSender.SendIntentException sendEx) {
+                        // Ignore the error.
+                    }
+                }
+            }
+        });
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+
+                }
+            }
+
+            ;
+        };
+
+
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
@@ -395,6 +449,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     @Override
     protected void onPause() {
         super.onPause();
+        fusedLocationClient.removeLocationUpdates(mLocationCallback);
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, (com.google.android.gms.location.LocationListener) this);
     }
 
