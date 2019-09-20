@@ -10,7 +10,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -22,7 +21,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -30,7 +28,6 @@ import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
@@ -49,8 +46,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -58,12 +53,25 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.maps.android.PolyUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements PlaceSelectionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, LocationListener {
 
+    private String route = null;
+    private String placeID = null;
     private GoogleMap mMap;
 
     //连接 Google Play Services 库中的 Google API，你需要先创建一个 GoogleApiClient。
@@ -92,7 +100,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback mLocationCallback;
-
+    JSONArray contacts = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +123,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         createLocationRequest();
         //绘制路线
         makeFragment();
-
     }
 
     /**
@@ -194,7 +201,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         //你的 app 现在已经可以接受位置变化通知了。当你改变位置，地图上的大头钉会随位置的改变而变。注意，点击大头钉仍然能够看到地址信息。
         mLastLocation = location;
         if (null != mLastLocation) {
-            placeMarkerOnMap(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+//            placeMarkerOnMap(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
         }
     }
     //GoogleApiClient.ConnectionCallbacks 提供了一个回调，当客户端和服务器成功建立连接时调用(onConnected()) 或者临时性的断开时调用 (onConnectionSuspended())。
@@ -315,7 +322,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             return;
         }
         //2
-        fusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
+        //fusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
 
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest,
                 (com.google.android.gms.location.LocationListener) this);
@@ -344,44 +351,44 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
         SettingsClient client = LocationServices.getSettingsClient(this);
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-            @Override
-            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                mLocationUpdateState = true;
-                startLocationUpdates();
-            }
-        });
-
-        task.addOnFailureListener(this, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                if (e instanceof ResolvableApiException) {
-                    // Location settings are not satisfied, but this can be fixed
-                    // by showing the user a dialog.
-                    try {
-                        // Show the dialog by calling startResolutionForResult(),
-                        // and check the result in onActivityResult().
-                        ResolvableApiException resolvable = (ResolvableApiException) e;
-                        resolvable.startResolutionForResult(MapsActivity.this,
-                                REQUEST_CHECK_SETTINGS);
-                    } catch (IntentSender.SendIntentException sendEx) {
-                        // Ignore the error.
-                    }
-                }
-            }
-        });
-
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
-                    // Update UI with location data
-
-                }
-            }
-
-            ;
-        };
+//        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+//            @Override
+//            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+//                mLocationUpdateState = true;
+//                startLocationUpdates();
+//            }
+//        });
+//
+//        task.addOnFailureListener(this, new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                if (e instanceof ResolvableApiException) {
+//                    // Location settings are not satisfied, but this can be fixed
+//                    // by showing the user a dialog.
+//                    try {
+//                        // Show the dialog by calling startResolutionForResult(),
+//                        // and check the result in onActivityResult().
+//                        ResolvableApiException resolvable = (ResolvableApiException) e;
+//                        resolvable.startResolutionForResult(MapsActivity.this,
+//                                REQUEST_CHECK_SETTINGS);
+//                    } catch (IntentSender.SendIntentException sendEx) {
+//                        // Ignore the error.
+//                    }
+//                }
+//            }
+//        });
+//
+//        mLocationCallback = new LocationCallback() {
+//            @Override
+//            public void onLocationResult(LocationResult locationResult) {
+//                for (Location location : locationResult.getLocations()) {
+//                    // Update UI with location data
+//
+//                }
+//            }
+//
+//            ;
+//        };
 
 
         PendingResult<LocationSettingsResult> result =
@@ -449,7 +456,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     @Override
     protected void onPause() {
         super.onPause();
-        fusedLocationClient.removeLocationUpdates(mLocationCallback);
+        //fusedLocationClient.removeLocationUpdates(mLocationCallback);
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, (com.google.android.gms.location.LocationListener) this);
     }
 
@@ -495,12 +502,46 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         // Set up a PlaceSelectionListener to handle the response.
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
+            public void onPlaceSelected(@NonNull final com.google.android.libraries.places.api.model.Place place) {
                 // TODO: Get info about the selected place.
                 Log.i("info", "Place: " + place.getName() + ", " + place.getId());
-                Toast.makeText(getApplication(),place.getName()+"+"+place.getId(),Toast.LENGTH_LONG).show();
-                makeLine(mMap);
-            }
+                placeID = place.getId();
+                //Toast.makeText(getApplication(),place.getName()+"+"+place.getId(),Toast.LENGTH_LONG).show();
+                MyThread t1 = new MyThread();
+                new Thread(t1).start();
+                try {
+                    t1.join();
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                    String line = "agryDundzRnXibE~yM{lBlyXaM|}O{y@`_SgrIb_OamDnpOmkA`bSseJ" +
+                            "jyTe|MlqHsgKpfBw|If`F}kBpiFefCp}EgeDdpO{uHjsIe`QnnHcy_@nmKk}Et`NsaMlsQisVbqJq" +
+                            "iTreNciY~eKcmSxkI{vOlnKonHtmZqwNr{PwtJ~pK_vDlfI}sQvwB}sLzeHodLvhEboBdbCcUzmApl" +
+                            "CniDaUr}CoyDzyCtDxmFkxDzi@kpJfgC_~EtcApt@hbA}fDuy@ycEpnAwgDkcC}lBjqDgsKpdDmqIx" +
+                            "d@_iIlbCawB`}AqoD|nBw`DjcGebAxnGjyA~jOv|@vpCyoB~oJcJf_InaAfcCl~BriInj@flAklCtk" +
+                            "GuxD`lHsqBxhDu~D~~Em{Nx_@gtH_`BkzVll@}eIomBy`GzaDemDdsD~rBnmOd}HxrMvjD~wGbVtuEe" +
+                            "hBjkLx`DhkKflDlwE`A`zBtfCd_KuWz_Jrj@ptDnqA|mMkVnsL}iAvkL`|AnyJ{LvdBd_@nyB{rHjzG" +
+                            "ijC~tDsm@dkFwzAbrHi_D~uAjqC||C{pFxkEg|SdpDgoZjmIikPleFo~LlmEqjN~eBm~VxnJk~OvcFo" +
+                            "dJjWwdKxoFae`@~yEe~Hfo@ckMxyG_nSnrLii_@r_CmxOtzGaoRlxBauJ`LifN~`D}uE_ZuyHmr@o|I" +
+                            "mfCsh\\giEmuIkeAkyLhmC_u\nwAkd\ti@ugSxqG{uf@npD_jFsvAkhMsvCkuIlyAehFqt@wlMzvEs_G" +
+                            "h`EiePr`DgcLbiCmfExgJ|lAtlk@upH~gRo`C`jGuoCnmFolCnvEhpExpFd{@fgDyt@xqJ{rRjqE}xD" +
+                            "`xIosB|hQktGzbQa{EnxG_|FfuJwdG|qFsvBye@}fFhkBqaM~fGulPwZe_\\dt@g`IzfDsrFx`FmpCf|A" +
+                            "qyEhxE{eJ`_BwjGpbIuzF`cHm`Ixz@yfEbwCarDcnBuzNbgFolk@uIooW`pLouAd`L{`B`dP}rEfyK}x" +
+                            "Bx~FinFx{D{cKxc@amGfzA_qHnbBghSlk@_gN`gHyfFbbN{jJnvKafKv_OkgA~bFefBlrDgvGbdHipFr}" +
+                            "CuiH~pIs~Ip~JqtKndIidR~`@kgKrcDgqHpfRcnMrrCeoDlnG{|@|eD_`K|rBoeK|uAom\\wpFwlO``@wsO" +
+                            "ocAyeG~pBw|G_k@cvJbcFw|UfnNesNblGorHtwEam@vsLpuDppLqnErkBeaLpzCkuD~fImkHz|KnqBn" +
+                            "`Dyw@ryBcnDvoHmdI~gAywG~wBadOuRgp@";
+
+                    List<LatLng> decodedPath = PolyUtil.decode(route);  //来源Google Map Util
+                    PolylineOptions lineOptions = new PolylineOptions();
+                    lineOptions.addAll(decodedPath); //添加路线
+                    lineOptions.color(Color.GREEN);  //线条设置
+                    lineOptions.jointType(JointType.ROUND);
+                    lineOptions.width(15f);
+                    mMap.addPolyline(lineOptions);
+                }
 
             @Override
             public void onError(Status status) {
@@ -510,33 +551,141 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         });
     }
 
-    //绘制路线
-    private void makeLine(GoogleMap mMap) {
-        String line = "agryDundzRnXibE~yM{lBlyXaM|}O{y@`_SgrIb_OamDnpOmkA`bSseJ" +
-                "jyTe|MlqHsgKpfBw|If`F}kBpiFefCp}EgeDdpO{uHjsIe`QnnHcy_@nmKk}Et`NsaMlsQisVbqJq" +
-                "iTreNciY~eKcmSxkI{vOlnKonHtmZqwNr{PwtJ~pK_vDlfI}sQvwB}sLzeHodLvhEboBdbCcUzmApl" +
-                "CniDaUr}CoyDzyCtDxmFkxDzi@kpJfgC_~EtcApt@hbA}fDuy@ycEpnAwgDkcC}lBjqDgsKpdDmqIx" +
-                "d@_iIlbCawB`}AqoD|nBw`DjcGebAxnGjyA~jOv|@vpCyoB~oJcJf_InaAfcCl~BriInj@flAklCtk" +
-                "GuxD`lHsqBxhDu~D~~Em{Nx_@gtH_`BkzVll@}eIomBy`GzaDemDdsD~rBnmOd}HxrMvjD~wGbVtuEe" +
-                "hBjkLx`DhkKflDlwE`A`zBtfCd_KuWz_Jrj@ptDnqA|mMkVnsL}iAvkL`|AnyJ{LvdBd_@nyB{rHjzG" +
-                "ijC~tDsm@dkFwzAbrHi_D~uAjqC||C{pFxkEg|SdpDgoZjmIikPleFo~LlmEqjN~eBm~VxnJk~OvcFo" +
-                "dJjWwdKxoFae`@~yEe~Hfo@ckMxyG_nSnrLii_@r_CmxOtzGaoRlxBauJ`LifN~`D}uE_ZuyHmr@o|I" +
-                "mfCsh\\giEmuIkeAkyLhmC_u\nwAkd\ti@ugSxqG{uf@npD_jFsvAkhMsvCkuIlyAehFqt@wlMzvEs_G" +
-                "h`EiePr`DgcLbiCmfExgJ|lAtlk@upH~gRo`C`jGuoCnmFolCnvEhpExpFd{@fgDyt@xqJ{rRjqE}xD" +
-                "`xIosB|hQktGzbQa{EnxG_|FfuJwdG|qFsvBye@}fFhkBqaM~fGulPwZe_\\dt@g`IzfDsrFx`FmpCf|A" +
-                "qyEhxE{eJ`_BwjGpbIuzF`cHm`Ixz@yfEbwCarDcnBuzNbgFolk@uIooW`pLouAd`L{`B`dP}rEfyK}x" +
-                "Bx~FinFx{D{cKxc@amGfzA_qHnbBghSlk@_gN`gHyfFbbN{jJnvKafKv_OkgA~bFefBlrDgvGbdHipFr}" +
-                "CuiH~pIs~Ip~JqtKndIidR~`@kgKrcDgqHpfRcnMrrCeoDlnG{|@|eD_`K|rBoeK|uAom\\wpFwlO``@wsO" +
-                "ocAyeG~pBw|G_k@cvJbcFw|UfnNesNblGorHtwEam@vsLpuDppLqnErkBeaLpzCkuD~fImkHz|KnqBn" +
-                "`Dyw@ryBcnDvoHmdI~gAywG~wBadOuRgp@";
 
-       List<LatLng> decodedPath = PolyUtil.decode(line);  //来源Google Map Util
-        PolylineOptions lineOptions = new PolylineOptions();
-            lineOptions.addAll(decodedPath); //添加路线
-            lineOptions.color(Color.GREEN);  //线条设置
-            lineOptions.jointType(JointType.ROUND);
-            lineOptions.width(15f);
-        mMap.addPolyline(lineOptions);
+    public class MyThread extends Thread {
+        @Override
+        public void run() {
+            HttpURLConnection connection = null;
+            BufferedReader reader = null;
+            try {
+                URL url = new URL("https://maps.googleapis.com/maps/api/geocode/json?place_id="+placeID+"&key=");
+                connection = (HttpURLConnection) url.openConnection();
+                //设置请求方法
+                connection.setRequestMethod("GET");
+                //设置连接超时时间（毫秒）
+                connection.setConnectTimeout(5000);
+                //设置读取超时时间（毫秒）
+                connection.setReadTimeout(5000);
+
+                //返回输入流
+                InputStream in = connection.getInputStream();
+
+                //读取输入流
+                reader = new BufferedReader(new InputStreamReader(in));
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    result.append(line);
+                }
+                parseJSON(result.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (connection != null) {//关闭连接
+                    connection.disconnect();
+                }
+            }
+        }
+    }
+
+
+
+
+    private void parseJSON(String jsonData) {
+        try {
+
+            JSONObject jsonObj = new JSONObject(jsonData);
+            // Getting JSON Array node
+            //String name=jsonObj.getString("overview_polyline");
+        //    Toast.makeText(getApplicationContext(),jsonObj.toString(),Toast.LENGTH_LONG).show();
+            JSONArray jsonArray = jsonObj.getJSONArray("results");
+            jsonObj = jsonArray.getJSONObject(0);
+
+            final Double lat=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
+            final Double lng=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+
+
+            HttpURLConnection connection = null;
+            BufferedReader reader = null;
+            try {
+                URL url = new URL("https://maps.googleapis.com/maps/api/directions/json?"+"origin="+ mLastLocation.getLatitude()+","+mLastLocation.getLongitude()+"&destination="+lat+","+lng+"&language=zh-CN&key=");
+                connection = (HttpURLConnection) url.openConnection();
+                //设置请求方法
+                connection.setRequestMethod("GET");
+                //设置连接超时时间（毫秒）
+                connection.setConnectTimeout(5000);
+                //设置读取超时时间（毫秒）
+                connection.setReadTimeout(5000);
+
+                //返回输入流
+                InputStream in = connection.getInputStream();
+
+                //读取输入流
+                reader = new BufferedReader(new InputStreamReader(in));
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    result.append(line);
+                }
+                route = makeLine(mMap,result.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (connection != null) {//关闭连接
+                    connection.disconnect();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    //绘制路线
+    private String makeLine(GoogleMap mMap,String jsonData) {
+
+        String line=null;
+
+        try {
+            JSONObject jsonObj = new JSONObject(jsonData);
+            JSONArray jsonArray = jsonObj.getJSONArray("routes");
+            jsonObj = jsonArray.getJSONObject(0);
+
+             line=jsonObj.getJSONObject("overview_polyline").getString("points");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return line;
+
+
+
+
     }
 
 
