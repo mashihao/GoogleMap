@@ -1,9 +1,11 @@
 package com.fujjitsu.cityguide.Fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fujjitsu.cityguide.Adapter.LinearAdapter;
 import com.fujjitsu.cityguide.R;
+import com.fujjitsu.cityguide.Service.MusicService;
 
 import java.util.ArrayList;
 
@@ -23,28 +26,37 @@ public class Example2Fragment extends Fragment {
     //自定义recyclerveiw的适配器
     private LinearAdapter linearAdapter;
 
+    private Button btn_start;
+    private Button btn_stop;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.example2_fragment,container,false);
-        //模拟数据
-        initData();
-        //对recycleview进行配置
-        initRecyclerView();
+        initView();
+        btn_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent mIntent = new Intent(getActivity(), MusicService.class);
+                mIntent.putExtra("key","com.example.action.START");
+                getActivity().startService(mIntent);
+            }
+        });
+        btn_stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent mIntent = new Intent(getActivity(), MusicService.class);
+                mIntent.putExtra("key","com.example.action.STOP");
+                getActivity().startService(mIntent);
+            }
+        });
+
         return view;
     }
 
-    private void initData() {
-        for (int i=0;i<10;i++){
-            goodsEntityList.add("lalala"+i);
-        }
-    }
-
-    private void initRecyclerView() {
-        recyclerView = (RecyclerView) view.findViewById(R.id.recycle);
-        linearAdapter = new LinearAdapter(getActivity(),goodsEntityList);
-        recyclerView.setAdapter(linearAdapter);
+    private void initView() {
+        btn_start =  view.findViewById(R.id.btn_start);
+        btn_stop=  view.findViewById(R.id.btn_stop);
     }
 
 

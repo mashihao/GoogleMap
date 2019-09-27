@@ -1,8 +1,13 @@
 apply plugin: 'com.android.application'
+group = 'com.github.felixgail'
+version = '0.3.6'
+description = 'com.github.felixgail:gplaymusic'
+sourceCompatibility = '1.8'
 
+sourceCompatibility = 1.6
 android {
-    compileSdkVersion 28
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 29
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.fujjitsu.cityguide"
         minSdkVersion 28
@@ -17,6 +22,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 }
 
 dependencies {
@@ -24,15 +33,25 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
-    testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.android.support:design:24.1.1'
     implementation 'com.google.android.gms:play-services-places:17.0.0'
-    implementation 'com.google.maps.android:android-maps-utils:0.5+'
+    implementation 'com.google.maps.android:android-maps-utils:0.5'
     implementation 'androidx.gridlayout:gridlayout:1.0.0'
     implementation 'com.google.android.libraries.places:places:2.0.0'
     implementation("com.squareup.okhttp3:okhttp:4.2.0")
+    implementation 'org.testng:testng:6.9.6'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.github.bjoernpetersen:gpsoauth:0.3.2'
+    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.5.0'
+    implementation 'javax.validation:validation-api:1.1.0.Final'
+    implementation 'io.gsonfire:gson-fire:1.8.3'
+    androidTestImplementation 'org.apache.tika:tika-core:1.19.1'
+    implementation 'junit:junit:4.12'
+    implementation 'org.apache.tika:tika-parsers:1.19.1'
 
 }
