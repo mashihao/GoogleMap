@@ -28,6 +28,12 @@ android {
     }
 }
 
+configurations.all
+{
+   // exclude group:'org.apache.tika:tika-parsers:1.19.1', module: 'jcl-over-slf4j'
+}
+
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -50,8 +56,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:3.5.0'
     implementation 'javax.validation:validation-api:1.1.0.Final'
     implementation 'io.gsonfire:gson-fire:1.8.3'
-    androidTestImplementation 'org.apache.tika:tika-core:1.19.1'
+    implementation ('org.apache.tika:tika-core:1.19.1')
     implementation 'junit:junit:4.12'
-    implementation 'org.apache.tika:tika-parsers:1.19.1'
+    //implementation ('org.apache.tika:tika-parsers:1.19.1')
+
 
 }
