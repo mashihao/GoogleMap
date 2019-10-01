@@ -11,6 +11,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -73,7 +75,9 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     private String route = null;
     private String placeID = null;
     private GoogleMap mMap;
-
+    private final String key = "AIzaSyDJW4jsPlNKgv6jFm3B5Edp5ywgdqLWdmc";
+    private Double lat = 0d;
+    private Double lng = 0d;
     //连接 Google Play Services 库中的 Google API，你需要先创建一个 GoogleApiClient。
     private GoogleApiClient mGoogleApiClient;
 
@@ -111,6 +115,15 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        View locationButton = findViewById(Integer.parseInt("2"));
+        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+// position on right bottom
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+        rlp.setMargins(0, 1200, 180, 0);
+
+
         //创建GoogleAPIClient实例
         if (null == mGoogleApiClient) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -142,11 +155,12 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             return;
         }
         googleMap.setMyLocationEnabled(true);
+
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
         /*这里我们开启了地图的缩放控制并指定了 MapsActdivity 作为回调，这样当用户点击大头钉时能够进行处理。
         现在，点击地图上位于悉尼的大头钉，你会看到显示了标题文本：*/
@@ -156,7 +170,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         //设置坐标
         LatLng myPlace = new LatLng(40.73,-73.99);// this is New York
         mMap.addMarker(new MarkerOptions().position(myPlace).title("this is a title test in New York"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(myPlace));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(myPlace));
 
         /*
         注意，地图自动将中心和大头钉对齐，moveCamera() 的作用就在于次。但是，地图的缩放比例不正确，因为它是缩得太小了。
@@ -164,7 +178,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         缩方比例 0 表示将地图缩小为最小的世界地图。大部分地图都支持缩放比例到 20，
         更远的地区仅仅支持到 13，将它设为二者之间的 12 比较合适，显示较多的细节且不会太近。
          */
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPlace,12));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPlace,12));
         /*
         1setMyLocationEnabled 一句打开了 my-location 图层，用于在用户坐标出绘制一个浅蓝色的圆点。同时加一个按钮到地图上，当你点击它，地图中心会移动到用户的坐标。
         2getLocationAvailability 一句判断设备上的位置信息是否有效。
@@ -172,26 +186,11 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         4如果能够获得最新坐标，将镜头对准用户当前坐标。
          */
         // 1
- //       mMap.setMyLocationEnabled(true);
+     //   mMap.setMyLocationEnabled(true);
         //修改地图类型 Android 地图 API 提供了几种地图类型：MAP_TYPE_NORMAL、MAP_TYPE_SATELLITE、 MAP_TYPE_TERRAIN、MAP_TYPE_HYBRID。
         mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
 
-        // 2
-        LocationAvailability locationAvailability =
-                LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
-        if (null != locationAvailability && locationAvailability.isLocationAvailable()) {
-            // 3
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            // 4
-            if (mLastLocation != null) {
-                LatLng currentLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation
-                        .getLongitude());
-                //添加大头钉
-                placeMarkerOnMap(currentLocation);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-            }
-        }
+
     }
     //LocationListener 定义了 onLocationChanged() 方法，当用户位置改变时调用。这个方法只有 LocationListener 注册以后才会调用
     @Override
@@ -201,7 +200,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         //你的 app 现在已经可以接受位置变化通知了。当你改变位置，地图上的大头钉会随位置的改变而变。注意，点击大头钉仍然能够看到地址信息。
         mLastLocation = location;
         if (null != mLastLocation) {
-//            placeMarkerOnMap(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+            placeMarkerOnMap(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
         }
     }
     //GoogleApiClient.ConnectionCallbacks 提供了一个回调，当客户端和服务器成功建立连接时调用(onConnected()) 或者临时性的断开时调用 (onConnectionSuspended())。
@@ -254,6 +253,29 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                     Manifest.permission.ACCESS_FINE_LOCATION},LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
+        // 1setMyLocationEnabled 一句打开了 my-location 图层，用于在用户坐标出绘制一个浅蓝色的圆点。同时加一个按钮到地图上，当你点击它，地图中心会移动到用户的坐标。
+        //2getLocationAvailability 一句判断设备上的位置信息是否有效。
+        //3getLastLocation 一句允许你获得当前有效的最新坐标。
+        //4如果能够获得最新坐标，将镜头对准用户当前坐标。
+
+        // 1
+        mMap.setMyLocationEnabled(true);
+        // 2
+        LocationAvailability locationAvailability =
+                LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
+        if (null != locationAvailability && locationAvailability.isLocationAvailable()) {
+            // 3
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            // 4
+            if (mLastLocation != null) {
+                LatLng currentLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation
+                        .getLongitude());
+                //添加大头钉
+                //placeMarkerOnMap(currentLocation);
+                //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
+            }
+        }
 
     }
 
@@ -274,10 +296,9 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 getResources(),R.mipmap.ic_user_location)));
 
         //修改大头钉颜色
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
         // 2
-        mMap.addMarker(markerOptions);
+        mMap.addMarker(markerOptions).setTitle("Your Local");
     }
 
     /*
@@ -351,46 +372,6 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
 
         SettingsClient client = LocationServices.getSettingsClient(this);
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-//        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-//            @Override
-//            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-//                mLocationUpdateState = true;
-//                startLocationUpdates();
-//            }
-//        });
-//
-//        task.addOnFailureListener(this, new OnFailureListener() {
-//            @Override
-//            public void onFailure(@NonNull Exception e) {
-//                if (e instanceof ResolvableApiException) {
-//                    // Location settings are not satisfied, but this can be fixed
-//                    // by showing the user a dialog.
-//                    try {
-//                        // Show the dialog by calling startResolutionForResult(),
-//                        // and check the result in onActivityResult().
-//                        ResolvableApiException resolvable = (ResolvableApiException) e;
-//                        resolvable.startResolutionForResult(MapsActivity.this,
-//                                REQUEST_CHECK_SETTINGS);
-//                    } catch (IntentSender.SendIntentException sendEx) {
-//                        // Ignore the error.
-//                    }
-//                }
-//            }
-//        });
-//
-//        mLocationCallback = new LocationCallback() {
-//            @Override
-//            public void onLocationResult(LocationResult locationResult) {
-//                for (Location location : locationResult.getLocations()) {
-//                    // Update UI with location data
-//
-//                }
-//            }
-//
-//            ;
-//        };
-
-
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
@@ -482,7 +463,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
     }
 
     private void makeFragment(){
-        Places.initialize(getApplicationContext(),"");
+        Places.initialize(getApplicationContext(),key);
         //设置地区过滤器
 //        AutocompleteFilter.Builder typeFilterBuilder = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_NONE);
 //        typeFilterBuilder.setCountry("JP");
@@ -491,7 +472,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
+        autocompleteFragment.getView().setBackgroundColor(Color.WHITE);
         autocompleteFragment.setCountry("JP");
 
         PlacesClient placesClient = Places.createClient(this);
@@ -511,7 +492,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                 new Thread(t1).start();
                 try {
                     t1.join();
-                    Thread.sleep(1000);
+                    Thread.sleep(800);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -533,14 +514,26 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
                             "CuiH~pIs~Ip~JqtKndIidR~`@kgKrcDgqHpfRcnMrrCeoDlnG{|@|eD_`K|rBoeK|uAom\\wpFwlO``@wsO" +
                             "ocAyeG~pBw|G_k@cvJbcFw|UfnNesNblGorHtwEam@vsLpuDppLqnErkBeaLpzCkuD~fImkHz|KnqBn" +
                             "`Dyw@ryBcnDvoHmdI~gAywG~wBadOuRgp@";
-
+                    mMap.clear();
                     List<LatLng> decodedPath = PolyUtil.decode(route);  //来源Google Map Util
                     PolylineOptions lineOptions = new PolylineOptions();
                     lineOptions.addAll(decodedPath); //添加路线
-                    lineOptions.color(Color.GREEN);  //线条设置
+                    lineOptions.color(Color.BLUE);  //线条设置
                     lineOptions.jointType(JointType.ROUND);
+                    lineOptions.geodesic(true);
                     lineOptions.width(15f);
-                    mMap.addPolyline(lineOptions);
+                     mMap.addPolyline(lineOptions);
+                     LatLng dest = new LatLng(lat, lng);
+                     mMap.addMarker(new MarkerOptions().position(dest).title("This is your destination"));
+                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dest,15));
+                     LatLng location = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                     mMap.addMarker(new MarkerOptions().position(location).title("This is your location"));
+                     mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                           @Override
+                           public boolean onMarkerClick(Marker marker) {
+                               return false;
+                           }
+                       });
                 }
 
             @Override
@@ -558,7 +551,7 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             HttpURLConnection connection = null;
             BufferedReader reader = null;
             try {
-                URL url = new URL("https://maps.googleapis.com/maps/api/geocode/json?place_id="+placeID+"&key=");
+                URL url = new URL("https://maps.googleapis.com/maps/api/geocode/json?place_id="+placeID+"&key="+key);
                 connection = (HttpURLConnection) url.openConnection();
                 //设置请求方法
                 connection.setRequestMethod("GET");
@@ -612,14 +605,14 @@ public class MapsActivity extends FragmentActivity implements PlaceSelectionList
             JSONArray jsonArray = jsonObj.getJSONArray("results");
             jsonObj = jsonArray.getJSONObject(0);
 
-            final Double lat=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
-            final Double lng=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+            lat=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
+            lng=jsonObj.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
 
 
             HttpURLConnection connection = null;
             BufferedReader reader = null;
             try {
-                URL url = new URL("https://maps.googleapis.com/maps/api/directions/json?"+"origin="+ mLastLocation.getLatitude()+","+mLastLocation.getLongitude()+"&destination="+lat+","+lng+"&language=zh-CN&key=");
+                URL url = new URL("https://maps.googleapis.com/maps/api/directions/json?"+"origin="+ mLastLocation.getLatitude()+","+mLastLocation.getLongitude()+"&destination="+lat+","+lng+"&language=zh-CN&key="+key);
                 connection = (HttpURLConnection) url.openConnection();
                 //设置请求方法
                 connection.setRequestMethod("GET");

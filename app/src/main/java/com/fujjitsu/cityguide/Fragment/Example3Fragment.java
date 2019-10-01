@@ -50,7 +50,7 @@ public class Example3Fragment extends Fragment {
         mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
-                Toast.makeText(getContext(),"123",Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(),"音乐初始化失败",Toast.LENGTH_LONG).show();
                 return false;
             }
         });
