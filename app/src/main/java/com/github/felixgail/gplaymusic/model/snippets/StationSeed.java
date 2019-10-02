@@ -33,7 +33,7 @@ public class StationSeed implements Serializable {
     this.seedId = album.getAlbumId();
   }
 
-  public StationSeed(Artist artist) {
+  public StationSeed(Artist artist) throws Throwable {
     this.seedType = StationSeedType.ARTIST;
     this.seedId = artist.getArtistId()
         .orElseThrow(
@@ -57,7 +57,7 @@ public class StationSeed implements Serializable {
    * creating a new one.
    */
   @Deprecated
-  public StationSeed(Station curatedStation) {
+  public StationSeed(Station curatedStation) throws Throwable {
     this.seedType = StationSeedType.CURATED_STATION;
     this.seedId = curatedStation.getClientId()
         .orElseThrow(() -> new IllegalArgumentException("Station does not contain a clientID"));

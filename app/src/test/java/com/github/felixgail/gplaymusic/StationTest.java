@@ -84,7 +84,7 @@ public class StationTest extends TestWithLogin {
   }
 
   @Test
-  public void createArtistStation() throws IOException {
+  public void createArtistStation() throws Throwable {
     Artist artist = getApi()
         .search("Imagine", 1, new SearchTypes(ResultType.ARTIST)).getArtists().get(0);
     assume(artist);
