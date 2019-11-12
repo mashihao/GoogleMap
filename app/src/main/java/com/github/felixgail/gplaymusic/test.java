@@ -17,14 +17,13 @@ public class test {
     public static GPlayMusic api;
     public static AuthToken authToken = null;
     public static GPlayMusic connect(){
-        ArrayList<URL> tracksUrl=new ArrayList<>();
         try {
             authToken = TokenProvider.provideToken(USERNAME,
                    PASSWORD, ANDROID_ID);
+        }catch (Gpsoauth.TokenRequestFailed tokenRequestFailed) {
+            tokenRequestFailed.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (Gpsoauth.TokenRequestFailed tokenRequestFailed) {
-            tokenRequestFailed.printStackTrace();
         }
         api = new GPlayMusic.Builder().setAuthToken(authToken).build();
         return api;

@@ -30,7 +30,7 @@ public class TokenProvider {
     Gpsoauth auth = new Gpsoauth(client);
     // clientSig taken from https://github.com/simon-weber/gmusicapi/blob/develop/gmusicapi/session.py#L199
     return auth.login(user, password, androidID, "sj", "com.google.android.music",
-        "AIzaSyARTC1h-_puqO0PHCHUoj1BTDjuAOxNVA8");//AIzaSyARTC1h-_puqO0PHCHUoj1BTDjuAOxNVA8
+        "38918a453d07199354f8b19af05ec6562ced5788");//AIzaSyARTC1h-_puqO0PHCHUoj1BTDjuAOxNVA8
   }
 
   /**

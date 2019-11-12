@@ -1,5 +1,4 @@
 package com.fujjitsu.cityguide.Service;
-import com.github.felixgail.gplaymusic.*;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.IBinder;
@@ -9,11 +8,13 @@ import com.fujjitsu.cityguide.Fragment.Example2Fragment;
 import com.github.felixgail.gplaymusic.api.GPlayMusic;
 import com.github.felixgail.gplaymusic.model.Track;
 import com.github.felixgail.gplaymusic.test;
+import com.github.felixgail.gplaymusic.util.TokenProvider;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
+import svarzee.gps.gpsoauth.AuthToken;
 import svarzee.gps.gpsoauth.Gpsoauth;
 
 public class MusicService extends IntentService  {
@@ -37,6 +38,7 @@ public class MusicService extends IntentService  {
     @Override
     public void onCreate() {
         super.onCreate();
+
     }
 
 
@@ -48,7 +50,9 @@ public class MusicService extends IntentService  {
     }
     @Override
     protected void onHandleIntent(Intent intent) {
+
         api = test.connect();
+
         switch (intent.getExtras().getString("key"))
         {
             case "1":
@@ -77,4 +81,7 @@ public class MusicService extends IntentService  {
         super.onDestroy();
     }
 
+
+
 }
+

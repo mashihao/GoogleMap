@@ -27,6 +27,7 @@ public class Language {
           defaultLocale.toString()));
       currentLang = new Properties();
     }
+
     defaultLang = currentLang;
   }
 
